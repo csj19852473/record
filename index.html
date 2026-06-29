@@ -141,7 +141,9 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
   <div class="card expandable">
     <button class="expand-btn" onclick="openExpand('calendar')">⤢</button>
     <div class="cal-header">
+      <button onclick="miniCalNav(-1)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">◀</button>
       <span id="cal-title"></span>
+      <button onclick="miniCalNav(1)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">▶</button>
     </div>
     <div class="cal-grid" id="cal-dh">
       <div class="cal-dh">일</div><div class="cal-dh">월</div><div class="cal-dh">화</div>
@@ -426,27 +428,8 @@ function openExpand(type) {
       </div>`;
     setTimeout(() => drawTrendLine('expand-us-chart', US_HISTORY, 'rgba(121,134,203,1)'), 50);
   } else if (type === 'calendar') {
-    title.textContent = '2026년 6월 달력';
-    const entryDates = Object.keys(ENTRY_RAW);
-    const y = 2026, m = 5; // 0-indexed month
-    const firstDay = new Date(y, m, 1).getDay();
-    const lastDate = new Date(y, m+1, 0).getDate();
-    const todayDate = new Date().getDate();
-    let calHtml = `<div class="cal-grid" style="gap:4px;">
-      ${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dh" style="font-size:12px;">${d}</div>`).join('')}`;
-    for (let i=0; i<firstDay; i++) calHtml += '<div></div>';
-    for (let d=1; d<=lastDate; d++) {
-      const ds = `${y}-06-${String(d).padStart(2,'0')}`;
-      const hasE = entryDates.includes(ds);
-      const isT = d === todayDate;
-      const eRaw = ENTRY_RAW[ds];
-      calHtml += `<div class="cal-cell${hasE?' has-entry':''}${isT?' today':''}" onclick="closeExpand();openEntry('${ds}')" style="min-height:44px;justify-content:center;">
-        <span class="cal-num" style="font-size:14px;">${d}</span>
-        ${hasE ? dotsBadge(eRaw && eRaw.dots, false) : ''}
-      </div>`;
-    }
-    calHtml += '</div>';
-    body.innerHTML = calHtml;
+    const n = new Date();
+    renderExpandCal(n.getFullYear(), n.getMonth());
   }
 
   history.pushState({ modal: 'expand' }, '');
@@ -459,6 +442,39 @@ function closeExpand() {
 document.getElementById('expand-modal').addEventListener('click', function(e) {
   if (e.target === this) closeExpand();
 });
+
+function renderExpandCal(y, m) {
+  const title = document.getElementById('expand-title');
+  const body  = document.getElementById('expand-body');
+  const today = new Date();
+  const entryDates = Object.keys(ENTRY_RAW);
+  const firstDay = new Date(y, m, 1).getDay();
+  const lastDate = new Date(y, m+1, 0).getDate();
+  let py = y, pm = m - 1; if (pm < 0)  { pm = 11; py--; }
+  let ny = y, nm = m + 1; if (nm > 11) { nm = 0;  ny++; }
+  title.textContent = `${y}년 ${m+1}월 달력`;
+  const btnStyle = `background:var(--bg2);border:1px solid var(--border);color:var(--text1);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:14px;`;
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <button onclick="renderExpandCal(${py},${pm})" style="${btnStyle}">◀</button>
+    <span style="font-size:14px;font-weight:600;">${y}년 ${m+1}월</span>
+    <button onclick="renderExpandCal(${ny},${nm})" style="${btnStyle}">▶</button>
+  </div>
+  <div class="cal-grid" style="gap:4px;">
+    ${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dh" style="font-size:12px;">${d}</div>`).join('')}`;
+  for (let i = 0; i < firstDay; i++) html += '<div></div>';
+  for (let d = 1; d <= lastDate; d++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasE = entryDates.includes(ds);
+    const eRaw = ENTRY_RAW[ds];
+    const isT = y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
+    html += `<div class="cal-cell${hasE?' has-entry':''}${isT?' today':''}" onclick="closeExpand();openEntry('${ds}')" style="min-height:44px;justify-content:center;">
+      <span class="cal-num" style="font-size:14px;">${d}</span>
+      ${hasE ? dotsBadge(eRaw && eRaw.dots, false) : ''}
+    </div>`;
+  }
+  html += '</div>';
+  body.innerHTML = html;
+}
 
 window.addEventListener('resize', () => {
   if (mainChart) mainChart.applyOptions({ width: document.getElementById('main-chart').clientWidth });
@@ -553,22 +569,21 @@ function dotsBadge(dots, compact) {
   return inner ? `<div class="cal-dots">${inner}</div>` : '';
 }
 
-(function() {
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
+let _miniCalY, _miniCalM;
+function renderMiniCal(y, m) {
+  _miniCalY = y; _miniCalM = m;
   document.getElementById('cal-title').textContent = `${y}년 ${m+1}월`;
-  const entryDates = new Set(Object.keys(ENTRY_RAW));
+  const today = new Date();
   const firstDay = new Date(y, m, 1).getDay();
   const lastDate = new Date(y, m+1, 0).getDate();
   const grid = document.getElementById('cal-grid');
-  const todayDate = now.getDate();
   let html = '';
   for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell other"></div>';
   for (let d = 1; d <= lastDate; d++) {
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const entry = ENTRY_RAW[dateStr];
     const hasEntry = !!entry;
-    const isToday = d === todayDate;
+    const isToday = y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
     let cls = 'cal-cell';
     if (hasEntry) cls += ' has-entry';
     if (isToday) cls += ' today';
@@ -578,7 +593,14 @@ function dotsBadge(dots, compact) {
     </div>`;
   }
   grid.innerHTML = html;
-})();
+}
+function miniCalNav(delta) {
+  let y = _miniCalY, m = _miniCalM + delta;
+  if (m < 0)  { m = 11; y--; }
+  if (m > 11) { m = 0;  y++; }
+  renderMiniCal(y, m);
+}
+(function() { const n = new Date(); renderMiniCal(n.getFullYear(), n.getMonth()); })();
 
 // ── 일지 목록 ────────────────────────────────────────
 (function() {
