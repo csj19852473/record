@@ -32,9 +32,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .card-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 /* 미니 카드 */
 #mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.mini-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; cursor: pointer; transition: border-color .15s, background .15s; }
-.mini-card:hover { background: var(--bg3); border-color: var(--accent); }
-.mini-card.active { border-color: var(--accent2); background: var(--bg3); }
+.mini-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; }
 .mini-name { font-size: 10px; color: var(--text2); margin-bottom: 1px; }
 .mini-pct  { font-size: 12px; font-weight: 600; margin-bottom: 1px; }
 .mini-price { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
@@ -85,6 +83,17 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent2); margin-top: 2px; }
 /* 자산 추이 */
 .trend-chart { width: 100%; height: 100px; }
+/* 카드 확장 버튼 */
+.expand-btn { position: absolute; top: 8px; right: 10px; background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 2px 4px; border-radius: 4px; line-height: 1; }
+.expand-btn:hover { color: var(--text1); background: var(--bg3); }
+.expandable { position: relative; }
+/* 확장 모달 */
+#expand-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 600; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+#expand-modal.open { display: flex; }
+#expand-inner { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; width: 100%; max-width: 700px; margin: auto; position: relative; }
+#expand-close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; }
+#expand-close:hover { color: var(--text1); }
+#expand-title { font-size: 14px; font-weight: 700; color: var(--accent2); margin-bottom: 14px; padding-right: 24px; }
 /* 일지 상세 팝업 */
 #entry-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
 #entry-modal.open { display: flex; }
@@ -119,7 +128,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-06-29 18:00</span>
+  <span class="upd-badge">업데이트: 2026-06-29 18:05</span>
 </header>
 
 <div id="main-layout">
@@ -134,7 +143,8 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
     <div class="mini-card" id="mc-wti"><div class="mini-name">WTI 원유</div><div class="mini-pct" id="p-wti">—</div><div class="mini-price" id="v-wti">—</div><canvas id="sc-wti"></canvas></div>
   </div>
 
-  <div class="card">
+  <div class="card expandable">
+    <button class="expand-btn" onclick="openExpand('supply')">⤢</button>
     <div class="card-title">수급 (자동)</div>
     <table class="supply-table" id="supply-tbl">
       <thead><tr><th></th><th>코스피</th><th>코스닥</th><th>선물</th></tr></thead>
@@ -178,7 +188,8 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <!-- ── 오른쪽: 포트폴리오 + 미국주식 + 캘린더 ── -->
 <div id="right-col">
 
-  <div class="card">
+  <div class="card expandable">
+    <button class="expand-btn" onclick="openExpand('kr-portfolio')">⤢</button>
     <div class="card-title">🤖 자동매매 자산</div>
     <div class="pf-row"><span class="pf-label">추정예탁자산</span><span class="pf-val">1,947,452원</span></div>
     <div class="pf-row"><span class="pf-label">보유평가</span><span class="pf-val">1,501,500원</span></div>
@@ -187,7 +198,8 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
     <div style="position:relative;height:90px;margin-top:8px;"><canvas id="kr-trend"></canvas></div>
   </div>
 
-  <div class="card">
+  <div class="card expandable">
+    <button class="expand-btn" onclick="openExpand('us-portfolio')">⤢</button>
     <div class="card-title">🇺🇸 미국주식</div>
     <div class="pf-row"><span class="pf-label">총 평가</span><span class="pf-val">60,664,386원</span></div>
     <div class="pf-row"><span class="pf-label">달러 환산</span><span class="pf-val">$39,345.96</span></div>
@@ -201,7 +213,8 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
     <div style="margin-top:10px;" id="us-stocks"></div>
   </div>
 
-  <div class="card">
+  <div class="card expandable">
+    <button class="expand-btn" onclick="openExpand('calendar')">⤢</button>
     <div class="cal-header">
       <span id="cal-title"></span>
     </div>
@@ -215,6 +228,15 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 
 </div>
 </div>
+</div>
+
+<!-- 카드 확장 모달 -->
+<div id="expand-modal">
+  <div id="expand-inner">
+    <button id="expand-close" onclick="closeExpand()">✕</button>
+    <div id="expand-title"></div>
+    <div id="expand-body"></div>
+  </div>
 </div>
 
 <!-- 일지 상세 팝업 -->
@@ -316,9 +338,8 @@ buildChart('sub-chart', MKT['kospi'] || [], false);
 
 // 차트 선택기
 const NAMES = {nasdaq:'나스닥', kospi:'코스피', btc:'비트코인', gold:'금', usdkrw:'달러/원', wti:'WTI 원유'};
-
-function switchMainChart(key) {
-  document.getElementById('chart-selector').value = key;
+document.getElementById('chart-selector').addEventListener('change', function() {
+  const key = this.value;
   document.getElementById('main-chart-name').textContent = NAMES[key] || key;
   const data = MKT[key] || [];
   if (mainSeries && data.length) {
@@ -329,26 +350,93 @@ function switchMainChart(key) {
     mainSeries.setData(formatted);
     mainChart.timeScale().fitContent();
   }
-  // 미니 카드 활성화 표시
-  document.querySelectorAll('.mini-card').forEach(el => el.classList.remove('active'));
-  const mc = document.getElementById('mc-' + key);
-  if (mc) mc.classList.add('active');
-  // 모바일에서 차트 영역으로 스크롤
-  const chartEl = document.getElementById('main-chart');
-  if (chartEl) chartEl.closest('.card').scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+
+// ── 카드 확장 모달 ────────────────────────────────────
+function openExpand(type) {
+  const modal = document.getElementById('expand-modal');
+  const title = document.getElementById('expand-title');
+  const body  = document.getElementById('expand-body');
+
+  if (type === 'supply') {
+    title.textContent = '수급 (자동)';
+    const dates = Object.keys(SUPPLY).sort();
+    const latest = dates.length ? SUPPLY[dates[dates.length-1]] : {};
+    const dateStr = dates.length ? dates[dates.length-1] : '';
+    body.innerHTML = `
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">${dateStr} 기준</div>
+      <table class="supply-table" style="width:100%;font-size:14px;">
+        <thead><tr><th></th><th>코스피</th><th>코스닥</th><th>선물</th></tr></thead>
+        <tbody>
+          ${[['개인', latest.kospi_ind, latest.kosdaq_ind, latest.deriv_ind],
+              ['외국인', latest.kospi_for, latest.kosdaq_for, latest.deriv_for],
+              ['기관', latest.kospi_inst, latest.kosdaq_inst, latest.deriv_inst]]
+            .map(([lbl,k,q,d]) => `<tr><td>${lbl}</td>
+              ${[k,q,d].map(v => v===undefined?'<td>—</td>':`<td class="${v>0?'up':v<0?'dn':''}">${v>0?'+':''}${Math.abs(v).toLocaleString()}억</td>`).join('')}
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } else if (type === 'kr-portfolio') {
+    title.textContent = '🤖 자동매매 자산';
+    const ps = PS_HISTORY[PS_HISTORY.length-1] || {};
+    body.innerHTML = `
+      <div class="pf-row" style="padding:10px 0;font-size:15px;"><span class="pf-label">추정예탁자산</span><span class="pf-val">1,947,452원</span></div>
+      <div class="pf-row" style="padding:10px 0;font-size:15px;"><span class="pf-label">보유평가</span><span class="pf-val">1,501,500원</span></div>
+      <div class="pf-row" style="padding:10px 0;font-size:15px;"><span class="pf-label">예수금</span><span class="pf-val">445,952원</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px;text-align:right;">2026-06-29 14:48 기준</div>
+      <div style="position:relative;height:160px;margin-top:14px;"><canvas id="expand-kr-chart"></canvas></div>`;
+    setTimeout(() => drawTrendLine('expand-kr-chart', PS_HISTORY, 'rgba(239,83,80,1)'), 50);
+  } else if (type === 'us-portfolio') {
+    title.textContent = '🇺🇸 미국주식';
+    const diff = 268339;
+    body.innerHTML = `
+      <div class="pf-row" style="padding:8px 0;font-size:14px;"><span class="pf-label">총 평가</span><span class="pf-val">60,664,386원</span></div>
+      <div class="pf-row" style="padding:8px 0;font-size:14px;"><span class="pf-label">달러 환산</span><span class="pf-val">$39,345.96</span></div>
+      <div class="pf-row" style="padding:8px 0;font-size:14px;"><span class="pf-label">환율</span><span class="pf-val">1,541.82원/달러</span></div>
+      <div class="pf-row" style="padding:8px 0;font-size:14px;"><span class="pf-label">전일 대비</span><span class="pf-val ${diff>=0?'up':'dn'}">${diff>=0?'+':''}${diff.toLocaleString()}원</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:right;">2026-06-29 16:30 기준</div>
+      <div style="position:relative;height:140px;margin:12px 0;"><canvas id="expand-us-chart"></canvas></div>
+      <div style="margin-top:4px;">
+        ${US_DETAILS.map(s => `<div class="us-stock-row">
+          <span class="us-tk">${s.ticker}</span>
+          <span class="us-name">${s.name}</span>
+          <span class="us-pnl ${s.pnl_pct>=0?'up':'dn'}">${s.pnl_pct>=0?'+':''}${s.pnl_pct.toFixed(1)}%</span>
+          <span class="us-val">$${s.value_usd.toLocaleString('en',{maximumFractionDigits:0})}</span>
+        </div>`).join('')}
+      </div>`;
+    setTimeout(() => drawTrendLine('expand-us-chart', US_HISTORY, 'rgba(121,134,203,1)'), 50);
+  } else if (type === 'calendar') {
+    title.textContent = '2026년 6월 달력';
+    const entryDates = Object.keys(ENTRY_RAW);
+    const y = 2026, m = 5; // 0-indexed month
+    const firstDay = new Date(y, m, 1).getDay();
+    const lastDate = new Date(y, m+1, 0).getDate();
+    const todayDate = new Date().getDate();
+    let calHtml = `<div class="cal-grid" style="gap:4px;">
+      ${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dh" style="font-size:12px;">${d}</div>`).join('')}`;
+    for (let i=0; i<firstDay; i++) calHtml += '<div></div>';
+    for (let d=1; d<=lastDate; d++) {
+      const ds = `${y}-06-${String(d).padStart(2,'0')}`;
+      const hasE = entryDates.includes(ds);
+      const isT = d === todayDate;
+      calHtml += `<div class="cal-cell${hasE?' has-entry':''}${isT?' today':''}" onclick="closeExpand();openEntry('${ds}')" style="min-height:40px;justify-content:center;">
+        <span class="cal-num" style="font-size:14px;">${d}</span>
+        ${hasE?'<div class="cal-dot"></div>':''}
+      </div>`;
+    }
+    calHtml += '</div>';
+    body.innerHTML = calHtml;
+  }
+
+  modal.classList.add('open');
 }
 
-document.getElementById('chart-selector').addEventListener('change', function() {
-  switchMainChart(this.value);
+function closeExpand() {
+  document.getElementById('expand-modal').classList.remove('open');
+}
+document.getElementById('expand-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeExpand();
 });
-
-// 미니 카드 클릭 → 큰 차트 전환
-KEYS.forEach(key => {
-  const mc = document.getElementById('mc-' + key);
-  if (mc) mc.addEventListener('click', () => switchMainChart(key));
-});
-// 나스닥 기본 활성화
-document.getElementById('mc-nasdaq')?.classList.add('active');
 
 window.addEventListener('resize', () => {
   if (mainChart) mainChart.applyOptions({ width: document.getElementById('main-chart').clientWidth });
