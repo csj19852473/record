@@ -32,7 +32,9 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .card-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 /* 미니 카드 */
 #mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.mini-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; }
+.mini-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; cursor: pointer; transition: border-color .15s, background .15s; }
+.mini-card:hover { background: var(--bg3); border-color: var(--accent); }
+.mini-card.active { border-color: var(--accent2); background: var(--bg3); }
 .mini-name { font-size: 10px; color: var(--text2); margin-bottom: 1px; }
 .mini-pct  { font-size: 12px; font-weight: 600; margin-bottom: 1px; }
 .mini-price { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
@@ -117,7 +119,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-06-29 17:56</span>
+  <span class="upd-badge">업데이트: 2026-06-29 18:00</span>
 </header>
 
 <div id="main-layout">
@@ -313,9 +315,10 @@ buildChart('main-chart', MKT['nasdaq'] || [], true);
 buildChart('sub-chart', MKT['kospi'] || [], false);
 
 // 차트 선택기
-document.getElementById('chart-selector').addEventListener('change', function() {
-  const key = this.value;
-  const NAMES = {nasdaq:'나스닥', kospi:'코스피', btc:'비트코인', gold:'금', usdkrw:'달러/원', wti:'WTI 원유'};
+const NAMES = {nasdaq:'나스닥', kospi:'코스피', btc:'비트코인', gold:'금', usdkrw:'달러/원', wti:'WTI 원유'};
+
+function switchMainChart(key) {
+  document.getElementById('chart-selector').value = key;
   document.getElementById('main-chart-name').textContent = NAMES[key] || key;
   const data = MKT[key] || [];
   if (mainSeries && data.length) {
@@ -326,7 +329,26 @@ document.getElementById('chart-selector').addEventListener('change', function() 
     mainSeries.setData(formatted);
     mainChart.timeScale().fitContent();
   }
+  // 미니 카드 활성화 표시
+  document.querySelectorAll('.mini-card').forEach(el => el.classList.remove('active'));
+  const mc = document.getElementById('mc-' + key);
+  if (mc) mc.classList.add('active');
+  // 모바일에서 차트 영역으로 스크롤
+  const chartEl = document.getElementById('main-chart');
+  if (chartEl) chartEl.closest('.card').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+document.getElementById('chart-selector').addEventListener('change', function() {
+  switchMainChart(this.value);
 });
+
+// 미니 카드 클릭 → 큰 차트 전환
+KEYS.forEach(key => {
+  const mc = document.getElementById('mc-' + key);
+  if (mc) mc.addEventListener('click', () => switchMainChart(key));
+});
+// 나스닥 기본 활성화
+document.getElementById('mc-nasdaq')?.classList.add('active');
 
 window.addEventListener('resize', () => {
   if (mainChart) mainChart.applyOptions({ width: document.getElementById('main-chart').clientWidth });
