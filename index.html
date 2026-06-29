@@ -81,7 +81,8 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .cal-cell.today { border-color: var(--accent2); }
 .cal-cell.other { opacity: .25; }
 .cal-num { font-size: 12px; line-height: 1; }
-.cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent2); margin-top: 2px; }
+.cal-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; margin-top: 2px; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
 /* 자산 추이 */
 .trend-chart { width: 100%; height: 100px; }
 /* 카드 확장 버튼 */
@@ -438,9 +439,10 @@ function openExpand(type) {
       const ds = `${y}-06-${String(d).padStart(2,'0')}`;
       const hasE = entryDates.includes(ds);
       const isT = d === todayDate;
-      calHtml += `<div class="cal-cell${hasE?' has-entry':''}${isT?' today':''}" onclick="closeExpand();openEntry('${ds}')" style="min-height:40px;justify-content:center;">
+      const eRaw = ENTRY_RAW[ds];
+      calHtml += `<div class="cal-cell${hasE?' has-entry':''}${isT?' today':''}" onclick="closeExpand();openEntry('${ds}')" style="min-height:44px;justify-content:center;">
         <span class="cal-num" style="font-size:14px;">${d}</span>
-        ${hasE?'<div class="cal-dot"></div>':''}
+        ${hasE ? dotsBadge(eRaw && eRaw.dots, false) : ''}
       </div>`;
     }
     calHtml += '</div>';
@@ -535,6 +537,21 @@ drawTrendLine('us-trend', US_HISTORY, 'rgba(121,134,203,1)');
 })();
 
 // ── 캘린더 ───────────────────────────────────────────
+const DOT_COLOR = { gray: '#9494b8', red: '#ef5350', green: '#4caf50', blue: '#7986cb' };
+function dotsBadge(dots, compact) {
+  if (!dots) return '';
+  const sections = ['issue', 'reaction', 'sources', 'analyses'];
+  let inner = '';
+  sections.forEach(key => {
+    const sec = dots[key];
+    if (!sec || sec.color === 'none') return;
+    const c = DOT_COLOR[sec.color] || '#9494b8';
+    const cnt = compact ? 1 : (sec.count || 1);
+    for (let i = 0; i < cnt; i++) inner += `<div class="cal-dot" style="background:${c};"></div>`;
+  });
+  return inner ? `<div class="cal-dots">${inner}</div>` : '';
+}
+
 (function() {
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth();
@@ -548,14 +565,15 @@ drawTrendLine('us-trend', US_HISTORY, 'rgba(121,134,203,1)');
   for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell other"></div>';
   for (let d = 1; d <= lastDate; d++) {
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const hasEntry = entryDates.has(dateStr);
+    const entry = ENTRY_RAW[dateStr];
+    const hasEntry = !!entry;
     const isToday = d === todayDate;
     let cls = 'cal-cell';
     if (hasEntry) cls += ' has-entry';
     if (isToday) cls += ' today';
     html += `<div class="${cls}" onclick="openEntry('${dateStr}')">
       <span class="cal-num">${d}</span>
-      ${hasEntry ? '<div class="cal-dot"></div>' : ''}
+      ${hasEntry ? dotsBadge(entry.dots, true) : ''}
     </div>`;
   }
   grid.innerHTML = html;
