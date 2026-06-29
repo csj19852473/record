@@ -152,7 +152,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-06-29 22:42</span>
+  <span class="upd-badge">업데이트: 2026-06-29 22:45</span>
 </header>
 
 <div id="main-layout">
@@ -278,7 +278,6 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">2026-06-29 16:30 기준</div>
     <div style="position:relative;height:90px;margin-top:8px;"><canvas id="us-trend"></canvas></div>
-    <div style="margin-top:10px;" id="us-stocks"></div>
   </div>
 
 
@@ -687,21 +686,6 @@ function drawTrendLine(canvasId, history, color) {
 drawTrendLine('kr-trend', PS_HISTORY, 'rgba(239,83,80,1)');
 drawTrendLine('us-trend', US_HISTORY, 'rgba(121,134,203,1)');
 
-// ── 미국 주식 상세 ────────────────────────────────────
-(function() {
-  const el = document.getElementById('us-stocks');
-  if (!el || !US_DETAILS.length) return;
-  el.innerHTML = US_DETAILS.map(s => {
-    const cls = s.pnl_pct >= 0 ? 'up' : 'dn';
-    const sign = s.pnl_pct >= 0 ? '+' : '';
-    return `<div class="us-stock-row">
-      <span class="us-tk">${s.ticker}</span>
-      <span class="us-name">${s.name}</span>
-      <span class="us-pnl ${cls}">${sign}${s.pnl_pct.toFixed(1)}%</span>
-      <span class="us-val">$${s.value_usd.toLocaleString('en', {maximumFractionDigits:0})}</span>
-    </div>`;
-  }).join('');
-})();
 
 // ── 달력 색깔 점 시스템 ──────────────────────────────
 const DOT_COLOR = { gray: '#9494b8', red: '#ef5350', green: '#4caf50', blue: '#7986cb' };
