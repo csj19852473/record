@@ -103,7 +103,9 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 #entry-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
 #entry-modal.open { display: flex; }
 #entry-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; width: 100%; max-width: 640px; max-height: 85vh; overflow-y: auto; position: relative; }
-#entry-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--accent2); }
+#entry-card h3 { font-size: 14px; font-weight: 700; margin: 0; color: var(--accent2); }
+.entry-nav-btn { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; padding: 2px 8px; flex-shrink: 0; line-height: 1; }
+.entry-nav-btn:disabled { opacity: .2; cursor: default; }
 .entry-section { margin-bottom: 12px; }
 .entry-section-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-weight: 500; }
 .entry-text { font-size: 13px; color: var(--text1); white-space: pre-wrap; line-height: 1.6; background: var(--bg2); border-radius: var(--radius); padding: 8px 10px; }
@@ -267,7 +269,11 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <div id="entry-modal">
   <div id="entry-card">
     <button class="close-btn" onclick="closeEntry()">✕</button>
-    <h3 id="entry-modal-date"></h3>
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px;">
+      <button id="entry-prev-btn" class="entry-nav-btn" onclick="entryNav(-1)">◀</button>
+      <h3 id="entry-modal-date" style="flex:1;text-align:center;"></h3>
+      <button id="entry-next-btn" class="entry-nav-btn" onclick="entryNav(1)">▶</button>
+    </div>
     <div id="entry-modal-body"></div>
   </div>
 </div>
@@ -589,6 +595,7 @@ function dotsBadge(dots, compact, hasEvent) {
 }
 
 let _miniCalY, _miniCalM;
+let _curEntryDate = null;
 function renderMiniCal(y, m) {
   _miniCalY = y; _miniCalM = m;
   document.getElementById('cal-title').textContent = `${y}년 ${m+1}월`;
@@ -685,11 +692,30 @@ function updateMiniCards(dateStr) {
   });
 }
 
+function updateEntryNavBtns() {
+  const dates = ENTRIES.map(e => e.date);
+  const idx = dates.indexOf(_curEntryDate);
+  const prevBtn = document.getElementById('entry-prev-btn');
+  const nextBtn = document.getElementById('entry-next-btn');
+  if (prevBtn) prevBtn.disabled = idx >= dates.length - 1;
+  if (nextBtn) nextBtn.disabled = idx <= 0;
+}
+function entryNav(dir) {
+  const dates = ENTRIES.map(e => e.date); // 최신순 정렬
+  const idx = dates.indexOf(_curEntryDate);
+  if (idx < 0) return;
+  const newIdx = idx - dir; // dir +1=최신(index-1), dir -1=과거(index+1)
+  if (newIdx < 0 || newIdx >= dates.length) return;
+  openEntry(dates[newIdx]);
+}
+
 function openEntry(date) {
   const e = ENTRY_RAW[date];
   if (!e) return;
+  _curEntryDate = date;
   updateMiniCards(date);
   showEntryPreview(date);
+  updateEntryNavBtns();
   document.getElementById('entry-modal-date').textContent = date + ' 일지';
   let html = '';
   if (e.issues && e.issues.length) {
@@ -743,6 +769,30 @@ window.addEventListener('popstate', () => {
   if (entryModal.classList.contains('open')) { entryModal.classList.remove('open'); return; }
   if (expandModal.classList.contains('open')) { expandModal.classList.remove('open'); }
 });
+
+// ── 스와이프 지원 ────────────────────────────────────
+(function() {
+  // 일지 상세 팝업 스와이프
+  let tx = 0;
+  const card = document.getElementById('entry-card');
+  card.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  card.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) < 50) return;
+    entryNav(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  // 미니 달력 스와이프 (월 이동)
+  let cx = 0;
+  const cal = document.getElementById('cal-section');
+  cal.addEventListener('touchstart', e => { cx = e.touches[0].clientX; }, { passive: true });
+  cal.addEventListener('touchend', e => {
+    if (document.getElementById('entry-modal').classList.contains('open')) return;
+    const dx = e.changedTouches[0].clientX - cx;
+    if (Math.abs(dx) < 50) return;
+    miniCalNav(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>
