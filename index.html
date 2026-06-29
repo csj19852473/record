@@ -624,9 +624,34 @@ function miniCalNav(delta) {
 })();
 
 // ── 일지 상세 팝업 ────────────────────────────────────
+function updateMiniCards(dateStr) {
+  KEYS.forEach(key => {
+    const data = MKT[key] || [];
+    if (!data.length) return;
+    let idx = -1;
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (data[i].date <= dateStr) { idx = i; break; }
+    }
+    if (idx < 0) return;
+    const cur = data[idx].close;
+    const prev = idx > 0 ? data[idx-1].close : cur;
+    const pct = (cur - prev) / prev * 100;
+    const cls = pct >= 0 ? 'up' : 'dn';
+    document.getElementById('p-' + key).innerHTML = `<span class="${cls}">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>`;
+    document.getElementById('v-' + key).textContent = fmtPrice(cur, key);
+    const mini = data.slice(Math.max(0, idx - 59), idx + 1);
+    const color = pct >= 0 ? '#ef5350' : '#1976d2';
+    const canvasId = 'sc-' + key;
+    const existing = Chart.getChart(canvasId);
+    if (existing) existing.destroy();
+    drawSparkline(canvasId, mini, color);
+  });
+}
+
 function openEntry(date) {
   const e = ENTRY_RAW[date];
   if (!e) return;
+  updateMiniCards(date);
   document.getElementById('entry-modal-date').textContent = date + ' 일지';
   let html = '';
   if (e.issues && e.issues.length) {
