@@ -23,10 +23,11 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .upd-badge { font-size: 11px; color: var(--text3); margin-left: auto; }
 .share-badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--text2); }
 /* 레이아웃 */
-#main-layout { display: grid; grid-template-columns: 240px 1fr 340px; gap: 0; align-items: start; }
-#left-col { display: flex; flex-direction: column; gap: 8px; padding: 12px 8px 12px 12px; border-right: 1px solid var(--border); overflow-y: auto; max-height: calc(100vh - 50px); }
-#center-col { padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-#right-col { border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 50px); overflow-y: auto; }
+#main-layout { display: grid; grid-template-columns: 240px 1fr 340px; grid-auto-rows: auto; gap: 0; align-items: start; }
+#left-col { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 8px; padding: 12px 8px 12px 12px; border-right: 1px solid var(--border); overflow-y: auto; max-height: calc(100vh - 50px); }
+#center-col { grid-column: 2; grid-row: 1 / span 2; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+#cal-section { grid-column: 3; grid-row: 1; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#right-col { grid-column: 3; grid-row: 2; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
 /* 카드 */
 .card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
 .card-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
@@ -110,8 +111,10 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 /* 모바일 */
 @media (max-width: 900px) {
   #main-layout { grid-template-columns: 1fr; }
-  #left-col, #right-col { border: none; max-height: none; overflow-y: visible; border-bottom: 1px solid var(--border); padding: 10px; }
-  #center-col { padding: 10px; }
+  #cal-section { grid-column: 1; grid-row: auto; border-left: none; border-bottom: 1px solid var(--border); }
+  #left-col { grid-column: 1; grid-row: auto; border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow-y: visible; padding: 10px; }
+  #center-col { grid-column: 1; grid-row: auto; padding: 10px; }
+  #right-col { grid-column: 1; grid-row: auto; border-left: none; border-bottom: 1px solid var(--border); max-height: none; overflow-y: visible; padding: 10px; }
   header { padding: 8px 12px; flex-wrap: nowrap; gap: 6px; }
   header h1 { font-size: 13px; white-space: nowrap; }
   .share-badge { font-size: 10px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
@@ -132,6 +135,22 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 </header>
 
 <div id="main-layout">
+<!-- ── 달력 (모바일 최상단, 데스크톱 오른쪽 열 상단) ── -->
+<div id="cal-section">
+  <div class="card expandable">
+    <button class="expand-btn" onclick="openExpand('calendar')">⤢</button>
+    <div class="cal-header">
+      <span id="cal-title"></span>
+    </div>
+    <div class="cal-grid" id="cal-dh">
+      <div class="cal-dh">일</div><div class="cal-dh">월</div><div class="cal-dh">화</div>
+      <div class="cal-dh">수</div><div class="cal-dh">목</div><div class="cal-dh">금</div>
+      <div class="cal-dh" style="color:#ef5350;">토</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
 <!-- ── 왼쪽: 시장 미니카드 + 수급 ── -->
 <div id="left-col">
   <div id="mini-grid">
@@ -185,7 +204,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
   </div>
 </div>
 
-<!-- ── 오른쪽: 포트폴리오 + 미국주식 + 캘린더 ── -->
+<!-- ── 오른쪽: 포트폴리오 + 미국주식 ── -->
 <div id="right-col">
 
   <div class="card expandable">
@@ -213,18 +232,6 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
     <div style="margin-top:10px;" id="us-stocks"></div>
   </div>
 
-  <div class="card expandable">
-    <button class="expand-btn" onclick="openExpand('calendar')">⤢</button>
-    <div class="cal-header">
-      <span id="cal-title"></span>
-    </div>
-    <div class="cal-grid" id="cal-dh">
-      <div class="cal-dh">일</div><div class="cal-dh">월</div><div class="cal-dh">화</div>
-      <div class="cal-dh">수</div><div class="cal-dh">목</div><div class="cal-dh">금</div>
-      <div class="cal-dh" style="color:#ef5350;">토</div>
-    </div>
-    <div class="cal-grid" id="cal-grid"></div>
-  </div>
 
 </div>
 </div>
@@ -359,23 +366,35 @@ function openExpand(type) {
   const body  = document.getElementById('expand-body');
 
   if (type === 'supply') {
-    title.textContent = '수급 (자동)';
-    const dates = Object.keys(SUPPLY).sort();
-    const latest = dates.length ? SUPPLY[dates[dates.length-1]] : {};
-    const dateStr = dates.length ? dates[dates.length-1] : '';
-    body.innerHTML = `
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">${dateStr} 기준</div>
-      <table class="supply-table" style="width:100%;font-size:14px;">
-        <thead><tr><th></th><th>코스피</th><th>코스닥</th><th>선물</th></tr></thead>
-        <tbody>
-          ${[['개인', latest.kospi_ind, latest.kosdaq_ind, latest.deriv_ind],
-              ['외국인', latest.kospi_for, latest.kosdaq_for, latest.deriv_for],
-              ['기관', latest.kospi_inst, latest.kosdaq_inst, latest.deriv_inst]]
-            .map(([lbl,k,q,d]) => `<tr><td>${lbl}</td>
-              ${[k,q,d].map(v => v===undefined?'<td>—</td>':`<td class="${v>0?'up':v<0?'dn':''}">${v>0?'+':(v<0?'-':'')}${Math.abs(v).toLocaleString()}억</td>`).join('')}
-            </tr>`).join('')}
-        </tbody>
-      </table>`;
+    title.textContent = '수급 — 최근 7일';
+    const dates = Object.keys(SUPPLY).sort().slice(-7);
+    const fmt = (v) => v === undefined || v === null ? '—'
+      : `<span class="${v>0?'up':v<0?'dn':''}">${v>0?'+':''}${v.toLocaleString()}억</span>`;
+    const mkTabs = ['코스피','코스닥','파생'];
+    let tabHtml = `<div style="display:flex;gap:6px;margin-bottom:10px;">`;
+    mkTabs.forEach((t,i) => tabHtml += `<button onclick="supplyTabSwitch(${i})" id="stab${i}" style="padding:4px 10px;border:1px solid var(--border);border-radius:14px;background:${i===0?'var(--accent)':'var(--bg2)'};color:var(--text1);font-size:12px;cursor:pointer;">${t}</button>`);
+    tabHtml += `</div>`;
+    const prefixes = [['kospi_ind','kospi_for','kospi_inst'],['kosdaq_ind','kosdaq_for','kosdaq_inst'],['deriv_ind','deriv_for','deriv_inst']];
+    const tables = prefixes.map((pf, mi) => {
+      const [pInd, pFor, pInst] = pf;
+      let t = `<div id="stbl${mi}" style="${mi>0?'display:none':''}">
+        <table class="supply-table" style="width:100%;font-size:13px;">
+          <thead><tr><th style="text-align:left;">날짜</th><th>개인</th><th>외국인</th><th>기관</th></tr></thead><tbody>`;
+      dates.forEach(d => {
+        const s = SUPPLY[d] || {};
+        t += `<tr><td style="color:var(--text2);font-size:11px;">${d.slice(5)}</td><td>${fmt(s[pInd])}</td><td>${fmt(s[pFor])}</td><td>${fmt(s[pInst])}</td></tr>`;
+      });
+      t += `</tbody></table></div>`;
+      return t;
+    });
+    body.innerHTML = tabHtml + tables.join('');
+    window.supplyTabSwitch = (idx) => {
+      for(let i=0;i<3;i++){
+        document.getElementById(`stbl${i}`).style.display = i===idx?'':'none';
+        const btn = document.getElementById(`stab${i}`);
+        btn.style.background = i===idx?'var(--accent)':'var(--bg2)';
+      }
+    };
   } else if (type === 'kr-portfolio') {
     title.textContent = '🤖 자동매매 자산';
     const ps = PS_HISTORY[PS_HISTORY.length-1] || {};
@@ -562,6 +581,17 @@ function openEntry(date) {
   if (!e) return;
   document.getElementById('entry-modal-date').textContent = date + ' 일지';
   let html = '';
+  if (e.issues && e.issues.length) {
+    html += `<div class="entry-section"><div class="entry-section-label">🎯 이슈</div>`;
+    e.issues.forEach(iss => {
+      const text = typeof iss === 'string' ? iss : (iss.text || iss.name || '');
+      const link = typeof iss === 'object' && iss.link ? iss.link : '';
+      html += `<div class="src-block" style="margin-bottom:4px;">${link
+        ? `<a href="${link}" target="_blank" rel="noopener" style="color:var(--accent2);font-size:12px;text-decoration:none;">${text}</a>`
+        : `<span style="font-size:12px;">${text}</span>`}</div>`;
+    });
+    html += `</div>`;
+  }
   if (e.reaction) {
     html += `<div class="entry-section"><div class="entry-section-label">💬 오늘의 반응</div><div class="entry-text">${e.reaction}</div></div>`;
   }
@@ -572,9 +602,12 @@ function openEntry(date) {
     });
     html += `</div>`;
   }
-  if (e.issues && e.issues.length) {
-    const issList = e.issues.map(iss => `<span class="tag-chip">${iss.name || iss}</span>`).join(' ');
-    html += `<div class="entry-section"><div class="entry-section-label">🎯 관심 종목</div>${issList}</div>`;
+  if (e.analyses && e.analyses.length) {
+    html += `<div class="entry-section"><div class="entry-section-label">📈 차트 분석</div>`;
+    e.analyses.forEach(a => {
+      if (a.text) html += `<div class="src-block"><div class="src-text">${a.text}</div></div>`;
+    });
+    html += `</div>`;
   }
   if (e.tags && e.tags.length) {
     const tagList = e.tags.map(t => `<span class="tag-chip">${t}</span>`).join(' ');
