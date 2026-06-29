@@ -52,6 +52,11 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .supply-table th:first-child { text-align: left; }
 .supply-table td { padding: 4px 6px; text-align: right; font-weight: 600; white-space: nowrap; }
 .supply-table td:first-child { text-align: left; color: var(--text2); font-weight: 400; font-size: 11px; }
+.supply-tab-bar { display:flex; gap:6px; margin-bottom:14px; }
+.supply-tab { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:5px 14px; font-size:12px; color:var(--text2); cursor:pointer; }
+.supply-tab.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+.supply-chart-wrap { position:relative; width:100%; height:180px; margin-bottom:16px; }
+.supply-chart-label { font-size:12px; font-weight:600; color:var(--text2); margin-bottom:4px; }
 /* 일지 목록 */
 .record-row { display: flex; align-items: center; padding: 7px 8px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; gap: 8px; }
 .record-row:hover { background: var(--bg2); border-color: var(--border); }
@@ -384,29 +389,73 @@ document.getElementById('chart-selector').addEventListener('change', function() 
 });
 
 // ── 카드 확장 모달 ────────────────────────────────────
+let _supMkt = 'kospi', _supCharts = {};
+function renderSupplyCharts(mkt) {
+  _supMkt = mkt;
+  document.querySelectorAll('.supply-tab').forEach(b => b.classList.toggle('active', b.textContent === {kospi:'코스피',kosdaq:'코스닥',deriv:'파생'}[mkt]));
+  const allDates = Object.keys(SUPPLY).sort();
+  const dates = allDates.slice(-30);
+  const labels = dates.map(d => d.slice(5));
+  const pfx = mkt;
+  const KEYS = { ind: pfx+'_ind', for: pfx+'_for', inst: pfx+'_inst' };
+  function getSeries(k) { return dates.map(d => { const v = SUPPLY[d]; return (v && v[k] != null) ? v[k] : null; }); }
+  function cumSum(arr) { let s=0; return arr.map(v => { if(v!=null) s+=v; return v!=null?s:null; }); }
+  const COLORS = { ind:{line:'#f87171'}, for:{line:'#60a5fa'}, inst:{line:'#4ade80'} };
+  [['supply-chart-ind','ind'],['supply-chart-for','for'],['supply-chart-inst','inst']].forEach(([cid,sk]) => {
+    const daily = getSeries(KEYS[sk]);
+    const cum = cumSum(daily);
+    if (_supCharts[cid]) { _supCharts[cid].destroy(); delete _supCharts[cid]; }
+    const canvas = document.getElementById(cid);
+    if (!canvas) return;
+    _supCharts[cid] = new Chart(canvas.getContext('2d'), {
+      data: { labels,
+        datasets: [
+          { type:'bar', label:'일별', data:daily,
+            backgroundColor: daily.map(v => v>=0 ? 'rgba(74,222,128,.7)' : 'rgba(248,113,113,.7)'),
+            borderColor:     daily.map(v => v>=0 ? '#4ade80' : '#f87171'),
+            borderWidth:1, yAxisID:'yBar', order:2 },
+          { type:'line', label:'누적', data:cum,
+            borderColor:COLORS[sk].line, backgroundColor:'transparent',
+            borderWidth:2, pointRadius:2, tension:0.3, yAxisID:'yCum', order:1 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label(ctx){ const v=ctx.parsed.y; if(v==null) return ''; return (ctx.dataset.label==='누적'?'누적 ':'일별 ')+(v>=0?'+':'')+Math.round(v).toLocaleString()+'억'; } } }
+        },
+        scales:{
+          x:{ ticks:{color:'#9ca3af',font:{size:10},maxRotation:45}, grid:{color:'rgba(255,255,255,.05)'} },
+          yBar:{ position:'left', ticks:{color:'#9ca3af',font:{size:10},callback(v){return(v>=0?'+':'')+Math.round(v).toLocaleString();}}, grid:{color:'rgba(255,255,255,.06)'} },
+          yCum:{ position:'right', ticks:{color:COLORS[sk].line,font:{size:10},callback(v){return(v>=0?'+':'')+Math.round(v).toLocaleString();}}, grid:{drawOnChartArea:false} }
+        }
+      }
+    });
+  });
+}
+
 function openExpand(type) {
   const modal = document.getElementById('expand-modal');
   const title = document.getElementById('expand-title');
   const body  = document.getElementById('expand-body');
 
   if (type === 'supply') {
-    title.textContent = '수급 (자동)';
-    const dates = Object.keys(SUPPLY).sort();
-    const latest = dates.length ? SUPPLY[dates[dates.length-1]] : {};
-    const dateStr = dates.length ? dates[dates.length-1] : '';
+    title.textContent = '수급 차트';
+    _supMkt = 'kospi';
     body.innerHTML = `
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">${dateStr} 기준</div>
-      <table class="supply-table" style="width:100%;font-size:14px;">
-        <thead><tr><th></th><th>코스피</th><th>코스닥</th><th>선물</th></tr></thead>
-        <tbody>
-          ${[['개인', latest.kospi_ind, latest.kosdaq_ind, latest.deriv_ind],
-              ['외국인', latest.kospi_for, latest.kosdaq_for, latest.deriv_for],
-              ['기관', latest.kospi_inst, latest.kosdaq_inst, latest.deriv_inst]]
-            .map(([lbl,k,q,d]) => `<tr><td>${lbl}</td>
-              ${[k,q,d].map(v => v===undefined?'<td>—</td>':`<td class="${v>0?'up':v<0?'dn':''}">${v>0?'+':(v<0?'-':'')}${Math.abs(v).toLocaleString()}억</td>`).join('')}
-            </tr>`).join('')}
-        </tbody>
-      </table>`;
+      <div class="supply-tab-bar">
+        <button class="supply-tab active" onclick="renderSupplyCharts('kospi')">코스피</button>
+        <button class="supply-tab" onclick="renderSupplyCharts('kosdaq')">코스닥</button>
+        <button class="supply-tab" onclick="renderSupplyCharts('deriv')">파생</button>
+      </div>
+      <div class="supply-chart-label">개인</div>
+      <div class="supply-chart-wrap"><canvas id="supply-chart-ind"></canvas></div>
+      <div class="supply-chart-label">외국인</div>
+      <div class="supply-chart-wrap"><canvas id="supply-chart-for"></canvas></div>
+      <div class="supply-chart-label">기관</div>
+      <div class="supply-chart-wrap"><canvas id="supply-chart-inst"></canvas></div>`;
+    setTimeout(() => renderSupplyCharts('kospi'), 50);
   } else if (type === 'kr-portfolio') {
     title.textContent = '🤖 자동매매 자산';
     const ps = PS_HISTORY[PS_HISTORY.length-1] || {};
