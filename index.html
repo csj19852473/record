@@ -449,6 +449,7 @@ function openExpand(type) {
     body.innerHTML = calHtml;
   }
 
+  history.pushState({ modal: 'expand' }, '');
   modal.classList.add('open');
 }
 
@@ -633,6 +634,7 @@ function openEntry(date) {
   }
   if (!html) html = '<div style="color:var(--text3);font-size:12px;">내용이 없습니다.</div>';
   document.getElementById('entry-modal-body').innerHTML = html;
+  history.pushState({ modal: 'entry', date }, '');
   document.getElementById('entry-modal').classList.add('open');
 }
 function closeEntry() {
@@ -640,6 +642,14 @@ function closeEntry() {
 }
 document.getElementById('entry-modal').addEventListener('click', function(e) {
   if (e.target === this) closeEntry();
+});
+
+// 뒤로가기 버튼으로 열려있는 모달만 닫기
+window.addEventListener('popstate', () => {
+  const entryModal = document.getElementById('entry-modal');
+  const expandModal = document.getElementById('expand-modal');
+  if (entryModal.classList.contains('open')) { entryModal.classList.remove('open'); return; }
+  if (expandModal.classList.contains('open')) { expandModal.classList.remove('open'); }
 });
 </script>
 </body>
