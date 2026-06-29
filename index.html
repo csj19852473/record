@@ -117,7 +117,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-06-29 17:47</span>
+  <span class="upd-badge">업데이트: 2026-06-29 17:56</span>
 </header>
 
 <div id="main-layout">
@@ -182,7 +182,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
     <div class="pf-row"><span class="pf-label">보유평가</span><span class="pf-val">1,501,500원</span></div>
     <div class="pf-row"><span class="pf-label">예수금</span><span class="pf-val">445,952원</span></div>
     <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">2026-06-29 14:48 기준</div>
-    <canvas class="trend-chart" id="kr-trend" style="margin-top:8px;"></canvas>
+    <div style="position:relative;height:90px;margin-top:8px;"><canvas id="kr-trend"></canvas></div>
   </div>
 
   <div class="card">
@@ -195,7 +195,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
       <span class="pf-val up">+268,339원</span>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right;">2026-06-29 16:30 기준</div>
-    <canvas class="trend-chart" id="us-trend" style="margin-top:8px;"></canvas>
+    <div style="position:relative;height:90px;margin-top:8px;"><canvas id="us-trend"></canvas></div>
     <div style="margin-top:10px;" id="us-stocks"></div>
   </div>
 
@@ -366,19 +366,24 @@ function drawTrendLine(canvasId, history, color) {
   const labels = history.map(h => h.date.slice(5));
   const vals = history.map(h => Math.round(h.val / 10000));
   const mn = Math.min(...vals), mx = Math.max(...vals);
-  const pad = (mx - mn) * 0.1 || 1;
+  const pad = (mx - mn) * 0.15 || 2;
   new Chart(canvas, {
     type: 'line',
     data: { labels, datasets: [{ data: vals, borderColor: color, backgroundColor: 'transparent', fill: false, tension: 0, pointRadius: 3, pointBackgroundColor: color, borderWidth: 2 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: {
-      x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
-      y: {
-        min: mn - pad,
-        max: mx + pad,
-        ticks: { font: { size: 9 }, callback: v => Math.round(v) + '만' },
-        grid: { color: '#2a2a45' }
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
+        y: {
+          min: mn - pad,
+          max: mx + pad,
+          ticks: { font: { size: 9 }, callback: v => Math.round(v) + '만' },
+          grid: { color: '#2a2a45' }
+        }
       }
-    } }
+    }
   });
 }
 drawTrendLine('kr-trend', PS_HISTORY, 'rgba(239,83,80,1)');
