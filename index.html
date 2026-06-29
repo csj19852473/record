@@ -101,6 +101,10 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
   #main-layout { grid-template-columns: 1fr; }
   #left-col, #right-col { border: none; max-height: none; overflow-y: visible; border-bottom: 1px solid var(--border); padding: 10px; }
   #center-col { padding: 10px; }
+  header { padding: 8px 12px; flex-wrap: nowrap; gap: 6px; }
+  header h1 { font-size: 13px; white-space: nowrap; }
+  .share-badge { font-size: 10px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+  .upd-badge { font-size: 9px; white-space: nowrap; }
 }
 /* 스크롤바 */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -113,7 +117,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-06-29 17:23</span>
+  <span class="upd-badge">업데이트: 2026-06-29 17:33</span>
 </header>
 
 <div id="main-layout">
@@ -267,7 +271,7 @@ KEYS.forEach(key => {
   const pct = ((cur - prev) / prev * 100);
   const cls = pct >= 0 ? 'up' : 'dn';
   const sign = pct >= 0 ? '+' : '';
-  document.getElementById('p-' + key).innerHTML = `<span class="${cls}">${sign}${Math.abs(pct).toFixed(2)}%</span>`;
+  document.getElementById('p-' + key).innerHTML = `<span class="${cls}">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>`;
   document.getElementById('v-' + key).textContent = fmtPrice(cur, key);
   const mini = data.slice(-60);
   const color = pct >= 0 ? '#ef5350' : '#1976d2';
@@ -333,16 +337,22 @@ window.addEventListener('resize', () => {
 (function() {
   const body = document.getElementById('supply-body');
   if (!body || !SUPPLY) return;
-  const rows = [['개인', 'ind'], ['외국인', 'for'], ['기관', 'inst']];
-  const mkts = ['kospi', 'kosdaq', 'futures'];
-  rows.forEach(([label, key]) => {
+  const dates = Object.keys(SUPPLY).sort();
+  if (!dates.length) return;
+  const latest = SUPPLY[dates[dates.length - 1]];
+  const rows = [
+    ['개인',   latest.kospi_ind,  latest.kosdaq_ind,  latest.deriv_ind],
+    ['외국인', latest.kospi_for,  latest.kosdaq_for,  latest.deriv_for],
+    ['기관',   latest.kospi_inst, latest.kosdaq_inst, latest.deriv_inst],
+  ];
+  rows.forEach(([label, kospi, kosdaq, deriv]) => {
     const tr = document.createElement('tr');
     let html = `<td>${label}</td>`;
-    mkts.forEach(m => {
-      const val = (SUPPLY[m] || {})[key] || 0;
+    [kospi, kosdaq, deriv].forEach(val => {
+      if (val === undefined || val === null) { html += '<td>—</td>'; return; }
       const cls = val > 0 ? 'up' : val < 0 ? 'dn' : '';
       const sign = val > 0 ? '+' : '';
-      html += `<td class="${cls}">${sign}${val ? (val/1e8).toFixed(0)+'억' : '—'}</td>`;
+      html += `<td class="${cls}">${sign}${Math.abs(val).toLocaleString()}억</td>`;
     });
     tr.innerHTML = html;
     body.appendChild(tr);
@@ -360,7 +370,12 @@ function drawTrendLine(canvasId, history, color) {
     data: { labels, datasets: [{ data: vals, borderColor: color, backgroundColor: color.replace('1)', '.08)'), fill: true, tension: .3, pointRadius: 2, borderWidth: 1.5 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: {
       x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
-      y: { ticks: { font: { size: 9 }, callback: v => v + '만' }, grid: { color: '#2a2a45' } }
+      y: {
+        min: Math.min(...vals) * 0.997,
+        max: Math.max(...vals) * 1.003,
+        ticks: { font: { size: 9 }, callback: v => Math.round(v) + '만' },
+        grid: { color: '#2a2a45' }
+      }
     } }
   });
 }
