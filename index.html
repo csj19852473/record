@@ -82,7 +82,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .cal-num { font-size: 12px; line-height: 1; }
 .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent2); margin-top: 2px; }
 /* 자산 추이 */
-.trend-chart { width: 100%; height: 80px; }
+.trend-chart { width: 100%; height: 100px; }
 /* 일지 상세 팝업 */
 #entry-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
 #entry-modal.open { display: flex; }
@@ -117,7 +117,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-06-29 17:33</span>
+  <span class="upd-badge">업데이트: 2026-06-29 17:47</span>
 </header>
 
 <div id="main-layout">
@@ -365,14 +365,16 @@ function drawTrendLine(canvasId, history, color) {
   if (!canvas || !history.length) return;
   const labels = history.map(h => h.date.slice(5));
   const vals = history.map(h => Math.round(h.val / 10000));
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const pad = (mx - mn) * 0.1 || 1;
   new Chart(canvas, {
     type: 'line',
-    data: { labels, datasets: [{ data: vals, borderColor: color, backgroundColor: color.replace('1)', '.08)'), fill: true, tension: .3, pointRadius: 2, borderWidth: 1.5 }] },
+    data: { labels, datasets: [{ data: vals, borderColor: color, backgroundColor: 'transparent', fill: false, tension: 0, pointRadius: 3, pointBackgroundColor: color, borderWidth: 2 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: {
       x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
       y: {
-        min: Math.min(...vals) * 0.997,
-        max: Math.max(...vals) * 1.003,
+        min: mn - pad,
+        max: mx + pad,
         ticks: { font: { size: 9 }, callback: v => Math.round(v) + '만' },
         grid: { color: '#2a2a45' }
       }
