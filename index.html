@@ -615,7 +615,13 @@ function miniCalNav(delta) {
   if (m > 11) { m = 0;  y++; }
   renderMiniCal(y, m);
 }
-(function() { const n = new Date(); renderMiniCal(n.getFullYear(), n.getMonth()); })();
+(function() {
+  const n = new Date();
+  renderMiniCal(n.getFullYear(), n.getMonth());
+  const todayStr = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  const todayCell = document.querySelector('#cal-grid .cal-cell.today');
+  selectDate(todayStr, todayCell);
+})();
 
 function showEntryPreview(dateStr) {
   const preview = document.getElementById('entry-preview');
