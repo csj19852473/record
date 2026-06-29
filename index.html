@@ -80,6 +80,9 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .cal-cell.has-entry .cal-num { font-weight: 700; color: var(--accent2); }
 .cal-cell.today { border-color: var(--accent2); }
 .cal-cell.other { opacity: .25; }
+.cal-cell.selected { background: var(--bg3); }
+#entry-preview { cursor: pointer; transition: opacity .15s; }
+#entry-preview:hover { opacity: .85; }
 .cal-num { font-size: 12px; line-height: 1; }
 .cal-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; margin-top: 2px; }
 .cal-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
@@ -153,6 +156,15 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
       <div class="cal-dh" style="color:#ef5350;">토</div>
     </div>
     <div class="cal-grid" id="cal-grid"></div>
+  </div>
+  <!-- 날짜 클릭 시 기록 미리보기 -->
+  <div id="entry-preview" class="card" style="display:none;padding:8px 10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <span id="ep-date" style="font-size:12px;font-weight:600;color:var(--accent2);"></span>
+      <div id="ep-dots"></div>
+    </div>
+    <div id="ep-summary" style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:4px;white-space:pre-wrap;"></div>
+    <div style="font-size:10px;color:var(--text3);text-align:right;">눌러서 전체 보기 ▶</div>
   </div>
 </div>
 
@@ -594,7 +606,7 @@ function renderMiniCal(y, m) {
     let cls = 'cal-cell';
     if (hasEntry) cls += ' has-entry';
     if (isToday) cls += ' today';
-    html += `<div class="${cls}" onclick="openEntry('${dateStr}')">
+    html += `<div class="${cls}" onclick="selectDate('${dateStr}', this)">
       <span class="cal-num">${d}</span>
       ${dotsBadge(hasEntry ? entry.dots : null, true, !!(EVENTS && EVENTS[dateStr]))}
     </div>`;
@@ -608,6 +620,31 @@ function miniCalNav(delta) {
   renderMiniCal(y, m);
 }
 (function() { const n = new Date(); renderMiniCal(n.getFullYear(), n.getMonth()); })();
+
+function showEntryPreview(dateStr) {
+  const preview = document.getElementById('entry-preview');
+  const e = ENTRY_RAW[dateStr];
+  if (!e) { preview.style.display = 'none'; return; }
+  let summary = e.reaction || '';
+  if (!summary && e.sources && e.sources.length) summary = e.sources[0].text || '';
+  if (!summary && e.issues && e.issues.length) {
+    const iss = e.issues[0];
+    summary = typeof iss === 'string' ? iss : (iss.text || iss.name || '');
+  }
+  summary = summary.slice(0, 120);
+  document.getElementById('ep-date').textContent = dateStr + ' 일지';
+  document.getElementById('ep-dots').innerHTML = dotsBadge(e.dots, true, !!(EVENTS && EVENTS[dateStr]));
+  document.getElementById('ep-summary').textContent = summary + (summary.length >= 120 ? '…' : '');
+  preview.onclick = () => openEntry(dateStr);
+  preview.style.display = '';
+}
+
+function selectDate(dateStr, el) {
+  document.querySelectorAll('#cal-grid .cal-cell.selected').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  updateMiniCards(dateStr);
+  showEntryPreview(dateStr);
+}
 
 // ── 일지 목록 ────────────────────────────────────────
 (function() {
@@ -652,6 +689,7 @@ function openEntry(date) {
   const e = ENTRY_RAW[date];
   if (!e) return;
   updateMiniCards(date);
+  showEntryPreview(date);
   document.getElementById('entry-modal-date').textContent = date + ' 일지';
   let html = '';
   if (e.issues && e.issues.length) {
