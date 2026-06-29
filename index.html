@@ -44,6 +44,9 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 .chart-mkt-name { font-size: 12px; font-weight: 600; color: var(--text2); }
 .chart-select { background: var(--bg2); color: var(--text1); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; font-size: 12px; }
 .lc { width: 100%; height: 210px; }
+.chart-resize-bar { height:18px; cursor:ns-resize; display:flex; align-items:center; justify-content:center; touch-action:none; margin:1px 0; }
+.chart-resize-bar::after { content:''; display:block; width:44px; height:3px; border-radius:3px; background:var(--border); transition:background .15s; }
+.chart-resize-bar:active::after { background:var(--accent2); }
 .nav-bar { height: 18px; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; position: relative; cursor: pointer; user-select: none; margin-top: 5px; overflow: hidden; }
 .nav-thumb { position: absolute; top: 2px; bottom: 2px; left: 75%; width: 25%; background: var(--accent); border-radius: 3px; cursor: grab; opacity: .65; }
 /* 수급 */
@@ -211,6 +214,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
       </select>
     </div>
     <div id="main-chart" class="lc"></div>
+    <div class="chart-resize-bar" data-chart="main-chart"></div>
     <div class="nav-bar"><div class="nav-thumb" id="nav-thumb"></div></div>
   </div>
 
@@ -219,6 +223,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
       <span class="chart-mkt-name">코스피</span>
     </div>
     <div id="sub-chart" class="lc"></div>
+    <div class="chart-resize-bar" data-chart="sub-chart"></div>
     <div class="nav-bar"><div class="nav-thumb" id="nav-thumb2"></div></div>
   </div>
 
@@ -815,6 +820,30 @@ window.addEventListener('popstate', () => {
   if (entryModal.classList.contains('open')) { entryModal.classList.remove('open'); return; }
   if (expandModal.classList.contains('open')) { expandModal.classList.remove('open'); }
 });
+
+// ── 차트 높이 드래그 리사이즈 ──────────────────────────
+(function() {
+  let _rzBar = null, _rzY = 0, _rzH = 0;
+  document.querySelectorAll('.chart-resize-bar').forEach(bar => {
+    bar.addEventListener('touchstart', e => {
+      _rzBar = bar;
+      _rzY = e.touches[0].clientY;
+      _rzH = document.getElementById(bar.dataset.chart).offsetHeight;
+      e.preventDefault();
+    }, { passive: false });
+  });
+  document.addEventListener('touchmove', e => {
+    if (!_rzBar) return;
+    const dy = e.touches[0].clientY - _rzY;
+    const newH = Math.max(120, Math.min(520, _rzH + dy));
+    const chartId = _rzBar.dataset.chart;
+    document.getElementById(chartId).style.height = newH + 'px';
+    if (chartId === 'main-chart' && mainChart) mainChart.applyOptions({ height: newH });
+    if (chartId === 'sub-chart'  && subChart)  subChart.applyOptions({ height: newH });
+    e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', () => { _rzBar = null; });
+})();
 
 // ── 스와이프 지원 ────────────────────────────────────
 (function() {
