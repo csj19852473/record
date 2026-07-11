@@ -149,7 +149,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-07-11 20:47</span>
+  <span class="upd-badge">업데이트: 2026-07-11 21:15</span>
 </header>
 
 <div id="main-layout">
@@ -770,15 +770,21 @@ function drawTrendLine(canvasId, history, color, histMarkers, depMarkers) {
       if (!hasMarkers) return;
       const ctx = chart.ctx, xs = chart.scales.x, area = chart.chartArea;
       chart.data.labels.forEach((lbl, i) => {
-        let col = null;
-        if (histSet.has(lbl)) col = '#eab308';
-        else if (depSet.has(lbl)) col = '#4ade80';
-        if (!col) return;
+        const isHist = histSet.has(lbl);
+        const isDep  = depSet.has(lbl);
+        if (!isHist && !isDep) return;
         const x = xs.getPixelForValue(i);
-        ctx.save();
-        ctx.fillStyle = col;
         const ty = area.top + 2;
-        ctx.beginPath(); ctx.moveTo(x-5, ty); ctx.lineTo(x+5, ty); ctx.lineTo(x, ty+9); ctx.closePath(); ctx.fill();
+        ctx.save();
+        if (isHist && isDep) {
+          ctx.fillStyle = '#eab308';
+          ctx.beginPath(); ctx.moveTo(x-6,ty); ctx.lineTo(x-1,ty); ctx.lineTo(x-3.5,ty+8); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#4ade80';
+          ctx.beginPath(); ctx.moveTo(x+1,ty); ctx.lineTo(x+6,ty); ctx.lineTo(x+3.5,ty+8); ctx.closePath(); ctx.fill();
+        } else {
+          ctx.fillStyle = isHist ? '#eab308' : '#4ade80';
+          ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
+        }
         ctx.restore();
       });
     }
@@ -880,15 +886,21 @@ function drawMobileUsdChart(canvasId, usdHistory, histMarkers, depMarkers) {
       const ctx = chart.ctx, xs = chart.scales.x, area = chart.chartArea;
       // 마커
       chart.data.labels.forEach((lbl, i) => {
-        let col = null;
-        if (histSet.has(lbl)) col = '#eab308';
-        else if (depSet.has(lbl)) col = '#4ade80';
-        if (!col) return;
+        const isHist = histSet.has(lbl);
+        const isDep  = depSet.has(lbl);
+        if (!isHist && !isDep) return;
         const x = xs.getPixelForValue(i);
-        ctx.save();
-        ctx.fillStyle = col;
         const ty = area.top + 2;
-        ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
+        ctx.save();
+        if (isHist && isDep) {
+          ctx.fillStyle = '#eab308';
+          ctx.beginPath(); ctx.moveTo(x-6,ty); ctx.lineTo(x-1,ty); ctx.lineTo(x-3.5,ty+8); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#4ade80';
+          ctx.beginPath(); ctx.moveTo(x+1,ty); ctx.lineTo(x+6,ty); ctx.lineTo(x+3.5,ty+8); ctx.closePath(); ctx.fill();
+        } else {
+          ctx.fillStyle = isHist ? '#eab308' : '#4ade80';
+          ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
+        }
         ctx.restore();
       });
       // 범례
