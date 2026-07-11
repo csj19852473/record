@@ -149,7 +149,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-07-11 21:15</span>
+  <span class="upd-badge">업데이트: 2026-07-11 21:25</span>
 </header>
 
 <div id="main-layout">
@@ -774,28 +774,30 @@ function drawTrendLine(canvasId, history, color, histMarkers, depMarkers) {
         const isDep  = depSet.has(lbl);
         if (!isHist && !isDep) return;
         const x = xs.getPixelForValue(i);
-        const ty = area.top + 2;
         ctx.save();
-        if (isHist && isDep) {
+        if (isHist) {
+          const ty = area.top + 2;
           ctx.fillStyle = '#eab308';
-          ctx.beginPath(); ctx.moveTo(x-6,ty); ctx.lineTo(x-1,ty); ctx.lineTo(x-3.5,ty+8); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
+        }
+        if (isDep) {
+          const row = isHist ? 1 : 0;
+          const ty = area.top + 2 + row * 11;
           ctx.fillStyle = '#4ade80';
-          ctx.beginPath(); ctx.moveTo(x+1,ty); ctx.lineTo(x+6,ty); ctx.lineTo(x+3.5,ty+8); ctx.closePath(); ctx.fill();
-        } else {
-          ctx.fillStyle = isHist ? '#eab308' : '#4ade80';
           ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
         }
         ctx.restore();
       });
     }
   };
+  const hasDoubleRow = [...histSet].some(d => depSet.has(d));
   new Chart(canvas, {
     type: 'line',
     data: { labels, datasets: [{ data: vals, borderColor: color, backgroundColor: 'transparent', fill: false, tension: 0, pointRadius: 3, pointBackgroundColor: color, borderWidth: 2 }] },
     options: {
       responsive: true, maintainAspectRatio: false,
       animation: false,
-      layout: { padding: { top: hasMarkers ? 14 : 0 } },
+      layout: { padding: { top: hasDoubleRow ? 25 : hasMarkers ? 14 : 0 } },
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
@@ -890,15 +892,16 @@ function drawMobileUsdChart(canvasId, usdHistory, histMarkers, depMarkers) {
         const isDep  = depSet.has(lbl);
         if (!isHist && !isDep) return;
         const x = xs.getPixelForValue(i);
-        const ty = area.top + 2;
         ctx.save();
-        if (isHist && isDep) {
+        if (isHist) {
+          const ty = area.top + 2;
           ctx.fillStyle = '#eab308';
-          ctx.beginPath(); ctx.moveTo(x-6,ty); ctx.lineTo(x-1,ty); ctx.lineTo(x-3.5,ty+8); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
+        }
+        if (isDep) {
+          const row = isHist ? 1 : 0;
+          const ty = area.top + 2 + row * 11;
           ctx.fillStyle = '#4ade80';
-          ctx.beginPath(); ctx.moveTo(x+1,ty); ctx.lineTo(x+6,ty); ctx.lineTo(x+3.5,ty+8); ctx.closePath(); ctx.fill();
-        } else {
-          ctx.fillStyle = isHist ? '#eab308' : '#4ade80';
           ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
         }
         ctx.restore();
@@ -923,12 +926,13 @@ function drawMobileUsdChart(canvasId, usdHistory, histMarkers, depMarkers) {
       }
     }
   };
+  const hasDoubleRowUsd = [...histSet].some(d => depSet.has(d));
   new Chart(canvas, {
     type: 'line',
     data: { labels, datasets: [{ data: vals, borderColor: '#60a5fa', backgroundColor: 'transparent', fill: false, tension: 0, pointRadius: 2, borderWidth: 2 }] },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
-      layout: { padding: { top: hasMarkers ? 16 : 0 } },
+      layout: { padding: { top: hasDoubleRowUsd ? 27 : hasMarkers ? 16 : 0 } },
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
