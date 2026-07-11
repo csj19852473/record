@@ -149,7 +149,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-07-11 21:25</span>
+  <span class="upd-badge">업데이트: 2026-07-11 21:39</span>
 </header>
 
 <div id="main-layout">
@@ -565,6 +565,17 @@ function openExpand(type) {
           <div style="font-size:15px;font-weight:700;color:${krPCol};">${krProfit>=0?'+':''}${fmtWon(krProfit)} <span style="font-size:12px;">${krRetPct>=0?'+':''}${krRetPct.toFixed(1)}%</span></div>
         </div>
       </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">💰 입금 내역</div>
+        ${KR_DEPOSITS.map(d => {
+          const pos = d.amount >= 0;
+          return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="color:var(--text3);min-width:76px;font-size:11px;">${d.date}</span>
+            <span style="font-weight:600;color:${pos?'#4ade80':'#f87171'};min-width:80px;">${pos?'+':''}${fmtWon(d.amount)}</span>
+            <span style="flex:1;color:var(--text2);">${d.memo||''}</span>
+          </div>`;
+        }).join('')}
+      </div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">📈 자산 추이</div>
       <div style="position:relative;height:140px;"><canvas id="expand-kr-chart"></canvas></div>
       <button id="m-kr-toggle" onclick="mKrToggle()" style="width:100%;background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.4);border-radius:6px;padding:7px;font-size:12px;color:#eab308;font-weight:600;cursor:pointer;margin:8px 0;">▼ 차트 더 보기</button>
@@ -587,7 +598,7 @@ function openExpand(type) {
           </div>`;
         }).join('')}
       </div>` : '<div style="margin-top:12px;font-size:11px;color:var(--text3);">보유 종목 없음</div>'}`;
-    setTimeout(() => drawTrendLine('expand-kr-chart', PS_HISTORY, '#eab308'), 50);
+    setTimeout(() => drawTrendLine('expand-kr-chart', PS_HISTORY, '#eab308', [], _krDepDates), 50);
   } else if (type === 'us-portfolio') {
     title.textContent = '🇺🇸 미국주식';
     _mUsExpanded = false;
@@ -813,7 +824,8 @@ function drawTrendLine(canvasId, history, color, histMarkers, depMarkers) {
   });
 }
 const _usDepDates = US_DEPOSITS.filter(d => d.memo !== '초기 투자금 (추적 시작)').map(d => d.date);
-drawTrendLine('kr-trend', PS_HISTORY, 'rgba(239,83,80,1)');
+const _krDepDates = KR_DEPOSITS.filter(d => d.memo !== '초기 투자금 (추적 시작)').map(d => d.date);
+drawTrendLine('kr-trend', PS_HISTORY, 'rgba(239,83,80,1)', [], _krDepDates);
 drawTrendLine('us-trend', US_HISTORY, 'rgba(121,134,203,1)', US_PF_HIST.map(h => h.date), _usDepDates);
 
 // ── 수익금/수익률 헬퍼 ───────────────────────────────
