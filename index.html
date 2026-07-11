@@ -149,7 +149,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-07-11 16:46</span>
+  <span class="upd-badge">업데이트: 2026-07-11 17:15</span>
 </header>
 
 <div id="main-layout">
@@ -793,11 +793,16 @@ function drawMobilePnlChart(canvasId, history, deposits, chartType) {
     vals = assets.map((v, i) => cumDep[i] > 0 ? parseFloat(((v - cumDep[i]) / cumDep[i] * 100).toFixed(2)) : 0);
     fmtTick = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
   }
-  const bgColors = vals.map(v => v >= 0 ? 'rgba(74,222,128,0.7)' : 'rgba(248,113,113,0.7)');
-  const bdColors = vals.map(v => v >= 0 ? '#4ade80' : '#f87171');
+  const ptColors = vals.map(v => v >= 0 ? '#4ade80' : '#f87171');
   new Chart(canvas, {
-    type: 'bar',
-    data: { labels: dates, datasets: [{ data: vals, backgroundColor: bgColors, borderColor: bdColors, borderWidth: 1 }] },
+    type: 'line',
+    data: { labels: dates, datasets: [{
+      data: vals,
+      segment: { borderColor: ctx => ctx.p0.parsed.y >= 0 ? '#4ade80' : '#f87171' },
+      pointBackgroundColor: ptColors,
+      backgroundColor: 'transparent', fill: false, tension: 0.2,
+      pointRadius: 2, borderWidth: 2
+    }] },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
       plugins: { legend: { display: false } },
