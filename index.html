@@ -149,7 +149,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-07-11 19:08</span>
+  <span class="upd-badge">업데이트: 2026-07-11 19:17</span>
 </header>
 
 <div id="main-layout">
@@ -517,7 +517,7 @@ function mUsToggle() {
   el.style.display = _mUsExpanded ? 'block' : 'none';
   btn.textContent = _mUsExpanded ? '▲ 차트 접기' : '▼ 차트 더 보기';
   if (_mUsExpanded) setTimeout(() => {
-    drawTrendLine('expand-us-krw', US_HISTORY, '#60a5fa', US_PF_HIST.map(h=>h.date), _usDepDates);
+    drawTrendLine('expand-us-krw', US_HISTORY, '#60a5fa');
     drawMobilePnlChart('expand-us-profit', US_HISTORY, US_DEPOSITS, 'profit');
     drawMobilePnlChart('expand-us-return', US_HISTORY, US_DEPOSITS, 'return');
   }, 50);
@@ -642,7 +642,7 @@ function openExpand(type) {
           </div>` : '<div style="font-size:12px;color:var(--text3);">기록 없음</div>'}
       </div>`;
     setTimeout(() => {
-      drawMobileUsdChart('expand-us-chart', US_HISTORY_USD);
+      drawMobileUsdChart('expand-us-chart', US_HISTORY_USD, US_PF_HIST.map(h=>h.date), _usDepDates);
       if (US_PF_HIST.length) {
         _usHistIdx = 0;
         _renderUsHistCard();
@@ -850,7 +850,7 @@ function drawMobilePnlChart(canvasId, history, deposits, chartType) {
     }
   });
 }
-function drawMobileUsdChart(canvasId, usdHistory) {
+function drawMobileUsdChart(canvasId, usdHistory, histMarkers, depMarkers) {
   const canvas = document.getElementById(canvasId);
   if (!canvas || !usdHistory.length) return;
   const existing = Chart.getChart(canvas);
@@ -859,17 +859,60 @@ function drawMobileUsdChart(canvasId, usdHistory) {
   const vals = usdHistory.map(h => h.val);
   const mn = Math.min(...vals), mx = Math.max(...vals);
   const pad = (mx - mn) * 0.15 || 0.1;
+  const histSet = new Set((histMarkers || []).map(d => d.slice(5)));
+  const depSet  = new Set((depMarkers  || []).map(d => d.slice(5)));
+  const hasMarkers = histSet.size || depSet.size;
+  const markerPlugin = {
+    id: 'usdMarkers',
+    afterDraw(chart) {
+      if (!hasMarkers) return;
+      const ctx = chart.ctx, xs = chart.scales.x, area = chart.chartArea;
+      // 마커
+      chart.data.labels.forEach((lbl, i) => {
+        let col = null;
+        if (histSet.has(lbl)) col = '#eab308';
+        else if (depSet.has(lbl)) col = '#4ade80';
+        if (!col) return;
+        const x = xs.getPixelForValue(i);
+        ctx.save();
+        ctx.fillStyle = col;
+        const ty = area.top + 2;
+        ctx.beginPath(); ctx.moveTo(x-5,ty); ctx.lineTo(x+5,ty); ctx.lineTo(x,ty+9); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      });
+      // 범례
+      ctx.font = '9px sans-serif'; ctx.textBaseline = 'middle';
+      let lx = area.left;
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillRect(lx, 5, 14, 2);
+      ctx.fillText('달러 자산', lx+17, 8);
+      lx += 70;
+      if (depSet.size) {
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath(); ctx.moveTo(lx,4); ctx.lineTo(lx+8,4); ctx.lineTo(lx+4,11); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#4ade80'; ctx.fillText('추가 입금', lx+11, 8);
+        lx += 70;
+      }
+      if (histSet.size) {
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath(); ctx.moveTo(lx,4); ctx.lineTo(lx+8,4); ctx.lineTo(lx+4,11); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#eab308'; ctx.fillText('포트폴리오 변경', lx+11, 8);
+      }
+    }
+  };
   new Chart(canvas, {
     type: 'line',
     data: { labels, datasets: [{ data: vals, borderColor: '#60a5fa', backgroundColor: 'transparent', fill: false, tension: 0, pointRadius: 2, borderWidth: 2 }] },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
+      layout: { padding: { top: hasMarkers ? 16 : 0 } },
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { font: { size: 9 }, maxTicksLimit: 5 }, grid: { color: '#2a2a45' } },
-        y: { min: mn - pad, max: mx + pad, ticks: { font: { size: 9 }, callback: v => '$' + v.toFixed(0) }, grid: { color: '#2a2a45' } }
+        y: { min: mn - pad, max: mx + pad, ticks: { font: { size: 9 }, callback: v => '$' + Math.round(v/1000) + 'k' }, grid: { color: '#2a2a45' } }
       }
-    }
+    },
+    plugins: [markerPlugin]
   });
 }
 
