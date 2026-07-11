@@ -149,7 +149,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-07-11 19:19</span>
+  <span class="upd-badge">업데이트: 2026-07-11 19:34</span>
 </header>
 
 <div id="main-layout">
@@ -474,7 +474,7 @@ function renderSupplyCharts(mkt) {
 // ── 포트폴리오 이력 슬라이더 ─────────────────────────
 let _usHistIdx = 0;
 function _renderUsHistCard() {
-  const hist = [...US_PF_HIST].reverse();
+  const hist = US_PF_HIST; // 오래된순 → 최신순 (원본 순서 유지)
   if (!hist.length) return;
   const h = hist[_usHistIdx];
   const tickers = (h.holdings||[]).map(s=>s.ticker).join(', ');
@@ -644,7 +644,7 @@ function openExpand(type) {
     setTimeout(() => {
       drawMobileUsdChart('expand-us-chart', US_HISTORY_USD, US_PF_HIST.map(h=>h.date), _usDepDates);
       if (US_PF_HIST.length) {
-        _usHistIdx = 0;
+        _usHistIdx = US_PF_HIST.length - 1;  // 처음엔 가장 최신 이력 표시
         _renderUsHistCard();
         // 스와이프 처리
         const card = document.getElementById('us-hist-card');
