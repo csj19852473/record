@@ -166,7 +166,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-09-25 17:41</span>
+  <span class="upd-badge">업데이트: 2026-09-25 18:44</span>
 </header>
 
 <div id="main-layout">
@@ -816,6 +816,13 @@ document.querySelectorAll('.tf-btn').forEach(btn => {
 });
 
 // ── 카드 확장 모달 ────────────────────────────────────
+// 수급 눈금: 값이 억원 단위 → 1만억 이상은 '조' (예: 14122 → 1.4조, 4000 → 4,000억)
+function fmtSupplyAxis(v) {
+  if (Math.abs(v) >= 10000) return (v / 10000).toFixed(1).replace(/[.]0$/, '') + '조';
+  if (Math.round(v) === 0) return '0';
+  return Math.round(v).toLocaleString() + '억';
+}
+const SC_PRICE_FMT = { type:'custom', formatter:fmtSupplyAxis, minMove:1 };
 let _supMkt = 'kospi', _supCharts = {};
 // PC 일지와 같은 방식: 전체 기간 + 누적선은 첫날부터, −/+/전체 버튼으로 기간 조절
 function renderSupplyCharts(mkt) {
@@ -849,8 +856,8 @@ function renderSupplyCharts(mkt) {
       height: container.clientHeight || 180,
     });
     addDragSelect(container, chart);
-    const histSeries = chart.addHistogramSeries({ priceScaleId:'right', base:0, lastValueVisible:false, priceLineVisible:false });
-    const lineSeries = chart.addLineSeries({ priceScaleId:'left', color:LINE_COLORS[k], lineWidth:1.5, lastValueVisible:false, priceLineVisible:false });
+    const histSeries = chart.addHistogramSeries({ priceScaleId:'right', base:0, lastValueVisible:false, priceLineVisible:false, priceFormat:SC_PRICE_FMT });
+    const lineSeries = chart.addLineSeries({ priceScaleId:'left', color:LINE_COLORS[k], lineWidth:1.5, lastValueVisible:false, priceLineVisible:false, priceFormat:SC_PRICE_FMT });
     histSeries.setData(hist);
     lineSeries.setData(line);
     chart.timeScale().fitContent();
