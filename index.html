@@ -166,7 +166,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-09-25 17:32</span>
+  <span class="upd-badge">업데이트: 2026-09-25 17:35</span>
 </header>
 
 <div id="main-layout">
@@ -1202,10 +1202,11 @@ window.addEventListener('resize', () => {
   var MF_LABELS = {deposit:'고객예탁금',credit:'신용잔고',futures:'선물예수금',margin:'미수잔고'};
   var MF_COLORS = {deposit:'#60a5fa',credit:'#f87171',futures:'#4ade80',margin:'#facc15'};
   function fmt억(v) {
+    // 값은 이미 억원 단위 (PC 일지와 동일한 표시)
     if (v == null) return '-';
-    if (Math.abs(v) >= 100000000) return (v/100000000).toFixed(1)+'조';
-    if (Math.abs(v) >= 10000) return Math.round(v/10000)+'억';
-    return Number(v).toLocaleString();
+    const n = Number(v);
+    if (Math.abs(n) >= 10000) return (n/10000).toFixed(1)+'조';
+    return n.toLocaleString();
   }
   function drawMfSpark(cv, k, dates) {
     if (!cv) return;
