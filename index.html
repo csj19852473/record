@@ -166,7 +166,7 @@ header h1 { font-size: 15px; font-weight: 600; color: var(--accent2); }
 <header>
   <h1>📊 투자 매크로 일지</h1>
   <span class="share-badge">👁 공유 뷰</span>
-  <span class="upd-badge">업데이트: 2026-10-17 19:10</span>
+  <span class="upd-badge">업데이트: 2026-10-17 19:16</span>
 </header>
 
 <div id="main-layout">
@@ -934,7 +934,7 @@ function renderKrPos() {
   const ds = Object.keys(KR_POS_HIST).sort();
   const list = _krPosIdx === -1 ? KR_POSITIONS : (KR_POS_HIST[ds[_krPosIdx]] || []);
   const lbl = document.getElementById('kr-pos-label');
-  if (lbl) lbl.textContent = _krPosIdx === -1 ? '지금' : ds[_krPosIdx] + ' (' + (_krPosIdx + 1) + '/' + ds.length + ')';
+  if (lbl) lbl.textContent = _krPosIdx === -1 ? '지금' : ds[_krPosIdx];
   const el = document.getElementById('kr-pos-list');
   if (!el) return;
   el.innerHTML = list.length ? list.map(p => {
